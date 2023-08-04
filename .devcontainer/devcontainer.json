@@ -1,0 +1,41 @@
+{
+  "name": "Ftrain Development Container",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "franneck94.vscode-python-dev-extension-pack"
+      ],
+      "settings": {
+        // Python Testing Configuration
+        "python.testing.pytestArgs": [
+          "."
+        ],
+        "python.testing.unittestEnabled": false,
+        "python.testing.pytestEnabled": true,
+        
+        // Python Formatting and Linting Configuration
+        "python.formatting.provider": "black",
+        "python.linting.mypyEnabled": true,
+        "python.linting.enabled": true
+      }
+    }
+  },
+  "runArgs": [
+    // GPU and IPC Configuration
+    "--gpus", "all",
+    "--ipc=host",
+    // Ulimit Configuration
+    "--ulimit", "memlock=-1",
+    "--ulimit", "stack=67108864"
+  ],
+  "remoteUser": "devHades",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/home/devHades/Ftrain,type=bind",
+  "workspaceFolder": "/home/devHades",
+  "postCreateCommand": "pip install --no-cache-dir ruff black mypy",
+  "postStartCommand": "pip install -e Ftrain"
+
+}

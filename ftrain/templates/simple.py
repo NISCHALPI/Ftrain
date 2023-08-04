@@ -2,18 +2,18 @@
 import typing as tp  # noqa: D100
 from typing import Any, Sequence
 
-import lightning as L  # noqa: N812
+import pytorch_lightning as pl
 import torch
-from lightning.pytorch.callbacks.callback import Callback
-from lightning.pytorch.utilities.types import STEP_OUTPUT
+from pytorch_lightning.callbacks import Callback
+from pytorch_lightning.utilities.types import STEP_OUTPUT
 from torchmetrics import Metric, MetricCollection
 
 from ..callbacks.callbacks import simple_callbacks
 
-__all__ = ["SimpleLightningModule"]
+__all__ = ["StandardLightningModule"]
 
 
-class SimpleLightningModule(L.LightningModule):
+class StandardLightningModule(pl.LightningModule):
     """A simple PyTorch Lightning module that provides common functionalities for training and validation.
 
     Args:
@@ -38,13 +38,15 @@ class SimpleLightningModule(L.LightningModule):
         model: torch.nn.Module,
         optimizer: torch.optim.Optimizer,
         loss: torch.nn.modules.loss._Loss,
+        metric: tp.Union[Metric, MetricCollection],
         lrs_scheduler: tp.Optional[
             torch.optim.lr_scheduler.LRScheduler
         ] = None,
         lrs_scheduler_moniter: tp.Optional[str] = None,
-        lr_init: float = 0.01,
-        example_input: tp.Optional[torch.Tensor] = None,
-        metric: tp.Optional[tp.Union[Metric, MetricCollection]] = None,
+        lr_init: float = 0.001,
+        example_input_shape: tp.Optional[
+            tp.Union[torch.Size, tp.Tuple[int]]
+        ] = None,
         *args: Any,  # noqa: ANN401
         **kwargs: Any,  # noqa: ANN401
     ) -> None:
@@ -55,15 +57,18 @@ class SimpleLightningModule(L.LightningModule):
         self._torch_lrs_scheduler = lrs_scheduler
         self._torch_lrs_scheuler_monitor = lrs_scheduler_moniter
         self.learning_rate = lr_init
-        self.example_input_array = example_input
-        self._metrics = metric
-        self.train_metrics = self._metrics.clone(prefix="train_")
-        self.valid_metrics = self._metrics.clone(prefix="valid_")
-        self.test_metric = self._metrics.clone(prefix="test_")
-        self.save_hyperparameters("lr_init", "metric_type", "lrs_scheduler")
+        # Link Learning rate to parameter groups
+        for parm in self._torch_optimizer.param_groups:
+            parm["lr"] = self.learning_rate
+        if example_input_shape is not None:
+            self.example_input_array = torch.rand(*example_input_shape)
+        self.train_metrics = metric.clone(prefix="train_")
+        self.valid_metrics = metric.clone(prefix="valid_")
+        self.test_metric = metric.clone(prefix="test_")
+        self.save_hyperparameters("lr_init", "lrs_scheduler")
 
     def forward(
-        self, input_ : torch.Tensor , *args, **kwargs  # noqa: ANN003
+        self, input_: torch.Tensor, *args, **kwargs  # noqa: ANN003
     ) -> torch.Tensor:  # noqa: ANN101, ANN401, D102
         """Implement Forward method."""
         return self._torch_model(input_)
@@ -78,9 +83,9 @@ class SimpleLightningModule(L.LightningModule):
         X, y = batch  # noqa: N806
         fp = self.forward(X)
         loss = self.loss(fp, y)
-        self.log("train_loss", loss)
+        self.log("train_loss", loss, on_epoch=True, on_step=True)
         self.train_metrics.update(fp, y)
-        return {"train_loss": loss}
+        return {"loss": loss}
 
     def on_train_epoch_end(self) -> None:  # noqa: ANN101
         """Called at the end of the train epoch.
@@ -98,11 +103,11 @@ class SimpleLightningModule(L.LightningModule):
         batch_idx: torch.Tensor,
         *args: Any,  # noqa: ANN401
         **kwargs: Any,  # noqa: ANN401
-    ) -> STEP_OUTPUT | None:
+    ) -> tp.Optional[STEP_OUTPUT]:
         X, y = batch  # noqa: N806
         fp = self.forward(X)
         loss = self.loss(fp, y)
-        self.log("val_loss", loss, prog_bar=True)
+        self.log("val_loss", loss, prog_bar=True, on_epoch=True, on_step=True)
         self.valid_metrics.update(fp, y)
         return {"val_loss": loss}
 
@@ -122,7 +127,7 @@ class SimpleLightningModule(L.LightningModule):
         batch_idx: torch.Tensor,
         *args: Any,  # noqa: ANN401
         **kwargs: Any,  # noqa: ANN401
-    ) -> STEP_OUTPUT | None:
+    ) -> tp.Optional[STEP_OUTPUT]:
         X, y = batch  # noqa: N806
         fp = self.forward(X)
         loss = self.loss(fp, y)
@@ -142,12 +147,15 @@ class SimpleLightningModule(L.LightningModule):
 
     def configure_callbacks(  # noqa: D102
         self,
-    ) -> Sequence[Callback] | Callback:  # noqa: ANN101, D102
+    ) -> tp.Union[Sequence[Callback], Callback]:  # noqa: ANN101, D102
         # Callbacks from simple callback module
         _default_callbacks = simple_callbacks
-        if self._torch_lrs_scheduler is None:
+        if (
+            self._torch_lrs_scheduler is None
+            and "lr_moniter" in _default_callbacks
+        ):
             _default_callbacks.pop("lr_monitor")
-        return _default_callbacks
+        return list(_default_callbacks.values())
 
     def configure_optimizers(self) -> dict:  # noqa: ANN101, D102
         return_dict = {"optimizer": self._torch_optimizer}

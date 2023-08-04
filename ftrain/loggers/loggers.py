@@ -1,4 +1,4 @@
-from lightning.pytorch.loggers import TensorBoardLogger  # noqa: D100
+from pytorch_lightning.loggers import TensorBoardLogger  # noqa: D100
 
 __all__ = ["get_tensor_board_logger"]
 

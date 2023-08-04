@@ -1,6 +1,6 @@
 import torch  # noqa: D100
-from lightning.pytorch import LightningDataModule
-from lightning.pytorch.utilities.types import (
+from pytorch_lightning import LightningDataModule
+from pytorch_lightning.utilities.types import (
     EVAL_DATALOADERS,
     TRAIN_DATALOADERS,
 )
@@ -13,6 +13,7 @@ __all__ = ["FashionMnistDataModule"]
 
 class FashionMnistDataModule(LightningDataModule):  # noqa: D101
     channels = 1
+    H, W = 28, 28
 
     def __init__(  # noqa: D107
         self,  # noqa: ANN101
