@@ -79,8 +79,8 @@ class CNNResidualClassifier(nn.Module):
         kernel_size: int = 3,
         activation: nn.Module | None = None,
         num_residual_blocks: int = 2,
-        insert_custom_block: dict[int, nn.Module] = None,
-        hidden_unique_channels: tuple[int, int] | None = None,
+        insert_custom_block: dict[int, nn.Module] | None = None,
+        hidden_unique_channels: list[int] | None = None,
         *args,
         **kwargs,
     ) -> None:
@@ -94,7 +94,7 @@ class CNNResidualClassifier(nn.Module):
         activation (nn.Module, optional): Activation function to be used. If None, ReLU is used. Default is None.
         num_residual_blocks (int, optional): Number of residual blocks per layer. Default is 2.
         insert_custom_block (Dict[int, nn.Module], optional): Dictionary containing custom blocks to be inserted at specific layer indices (0-indexed). Default is None.
-        hidden_unique_channels (Tuple[int, int], optional): Tuple containing custom unique channels to be used. Default is None.
+        hidden_unique_channels (list[int], optional): Tuple containing custom unique channels to be used. Default is None.
         *args: Variable length argument list.
         **kwargs: Arbitrary keyword arguments.
 
@@ -121,10 +121,7 @@ class CNNResidualClassifier(nn.Module):
 
         if hidden_unique_channels is not None:
             assert all(
-                [
-                    isinstance(channel, int)
-                    for channel in hidden_unique_channels
-                ]
+                [isinstance(channel, int) for channel in hidden_unique_channels]
             ), "Channels must be integers."
             if max(hidden_unique_channels) > 512:
                 warnings.warn(
@@ -140,7 +137,9 @@ class CNNResidualClassifier(nn.Module):
             hidden_unique_channels = hidden_unique_channels
 
         # Calculate Channel Propagator
-        self.internal_channel_propagotar = self._get_channel_propagator(hidden_unique_channels, self.layers)
+        self.internal_channel_propagotar = self._get_channel_propagator(
+            hidden_unique_channels, self.layers
+        )
 
         # Default insert custom block
         if insert_custom_block is not None:
@@ -148,10 +147,7 @@ class CNNResidualClassifier(nn.Module):
                 [idx < self.layers for idx in insert_custom_block]
             ), "Custom block index out of range. Must be between [0,n_layers)."
             assert all(
-                [
-                    isinstance(block, nn.Module)
-                    for block in insert_custom_block.values()
-                ]
+                [isinstance(block, nn.Module) for block in insert_custom_block.values()]
             ), "Custom block must be a nn.Module."
             self.insert_custom_block = insert_custom_block
 
@@ -191,22 +187,21 @@ class CNNResidualClassifier(nn.Module):
     @staticmethod
     def _get_channel_propagator(
         internal_uniques_channels: list[int], n_layers: int
-    ) -> torch.Tensor:
+    ) -> list[int]:
         propagotar = torch.tensor(internal_uniques_channels).repeat(
             n_layers // len(internal_uniques_channels) + 1
         )
-        return propagotar[:n_layers].sort()[0]
+        return list(propagotar[:n_layers].sort()[0])
 
     def _build_network(self) -> nn.Module:
         model = nn.ModuleList()
-
 
         # Build network n-1 layers
         for idx in range(0, self.layers - 1):
             model.append(
                 PreactivatedResidualBlockCNN(
-                    channel_in=self.internal_channel_propagotar [idx],
-                    channel_out=self.internal_channel_propagotar [idx + 1],
+                    channel_in=self.internal_channel_propagotar[idx],
+                    channel_out=self.internal_channel_propagotar[idx + 1],
                     kernel_size=self.kernel_size,
                     activation=self.activation,
                     count=self.num_residual_blocks,
@@ -214,16 +209,13 @@ class CNNResidualClassifier(nn.Module):
                 )
             )
             # Add custom block if in post format
-            if (
-                hasattr(self, "insert_custom_block")
-                and idx in self.insert_custom_block
-            ):
+            if hasattr(self, "insert_custom_block") and idx in self.insert_custom_block:
                 model.append(self.insert_custom_block[idx])
 
         # Add Last Layer that maps to out_channels
         model.append(
             PreactivatedBottelNeckBlockCNN(
-                channel_in=self.internal_channel_propagotar [-1],
+                channel_in=self.internal_channel_propagotar[-1],
                 channel_out=self.out_channels,
                 kernel_size=self.kernel_size,
                 activation=self.activation,

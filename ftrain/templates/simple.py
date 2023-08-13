@@ -1,12 +1,20 @@
 """Pre-Implemented Simple Lightning Module."""
-from collections.abc import Sequence
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+
+    from pytorch_lightning.callbacks import Callback
+    from pytorch_lightning.utilities.types import STEP_OUTPUT
+    from torchmetrics import MetricCollection
+
+
 from typing import Any
 
 import pytorch_lightning as pl
 import torch
-from pytorch_lightning.callbacks import Callback
-from pytorch_lightning.utilities.types import STEP_OUTPUT
-from torchmetrics import Metric, MetricCollection
 
 from ..callbacks.callbacks import simple_callbacks
 
@@ -38,7 +46,7 @@ class StandardLightningModule(pl.LightningModule):
         model: torch.nn.Module,
         optimizer: torch.optim.Optimizer,
         loss: torch.nn.modules.loss._Loss,
-        metric: Metric | MetricCollection,
+        metric: MetricCollection,
         lrs_scheduler: torch.optim.lr_scheduler.LRScheduler | None = None,
         lrs_scheduler_moniter: str | None = None,
         lr_init: float = 0.001,
@@ -64,7 +72,8 @@ class StandardLightningModule(pl.LightningModule):
         self.save_hyperparameters("lr_init", "lrs_scheduler")
 
     def forward(
-        self, input_: torch.Tensor, *args, **kwargs  # noqa: ANN003
+        self,
+        input_: torch.Tensor,  # noqa: ANN003
     ) -> torch.Tensor:  # noqa: ANN101, ANN401, D102
         """Implement Forward method."""
         return self._torch_model(input_)
@@ -72,9 +81,7 @@ class StandardLightningModule(pl.LightningModule):
     def training_step(  # noqa: D102
         self,  # noqa: ANN101
         batch: torch.Tensor,
-        batch_idx: torch.Tensor,
-        *args: Any,  # noqa: ANN401
-        **kwargs: Any,  # noqa: ANN401
+        batch_idx: int,  # noqa: ARG002
     ) -> STEP_OUTPUT:
         X, y = batch  # noqa: N806
         fp = self.forward(X)
@@ -96,9 +103,7 @@ class StandardLightningModule(pl.LightningModule):
     def validation_step(  # noqa: D102
         self,  # noqa: ANN101
         batch: torch.Tensor,
-        batch_idx: torch.Tensor,
-        *args: Any,  # noqa: ANN401
-        **kwargs: Any,  # noqa: ANN401
+        batch_idx: int,  # noqa: ARG002
     ) -> STEP_OUTPUT | None:
         X, y = batch  # noqa: N806
         fp = self.forward(X)
@@ -120,9 +125,7 @@ class StandardLightningModule(pl.LightningModule):
     def test_step(  # noqa: D102
         self,  # noqa: ANN101
         batch: torch.Tensor,
-        batch_idx: torch.Tensor,
-        *args: Any,  # noqa: ANN401
-        **kwargs: Any,  # noqa: ANN401
+        batch_idx: torch.Tensor,  # noqa: ARG002
     ) -> STEP_OUTPUT | None:
         X, y = batch  # noqa: N806
         fp = self.forward(X)
@@ -146,10 +149,7 @@ class StandardLightningModule(pl.LightningModule):
     ) -> Sequence[Callback] | Callback:  # noqa: ANN101, D102
         # Callbacks from simple callback module
         _default_callbacks = simple_callbacks
-        if (
-            self._torch_lrs_scheduler is None
-            and "lr_moniter" in _default_callbacks
-        ):
+        if self._torch_lrs_scheduler is None and "lr_moniter" in _default_callbacks:
             _default_callbacks.pop("lr_monitor")
         return list(_default_callbacks.values())
 
@@ -157,13 +157,11 @@ class StandardLightningModule(pl.LightningModule):
         return_dict = {"optimizer": self._torch_optimizer}
         # Scheduler Available
         if self._torch_lrs_scheduler is not None:
-            return_dict["lr_scheduler"] = {
-                "scheduler": self._torch_lrs_scheduler
-            }
+            return_dict["lr_scheduler"] = {"scheduler": self._torch_lrs_scheduler}  # type: ignore[assignment]
             # If conditioned on metric
             if self._torch_lrs_scheuler_monitor is not None:
-                return_dict["lr_scheduler"][
+                return_dict["lr_scheduler"][  # type: ignore[index]
                     "monitor"
                 ] = self._torch_lrs_scheuler_monitor
-                return_dict["lr_scheduler"]["strict"] = True
+                return_dict["lr_scheduler"]["strict"] = True  # type: ignore[index]
         return return_dict

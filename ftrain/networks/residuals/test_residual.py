@@ -20,15 +20,11 @@ def linear_input():
 
 
 # Test FCResidualBlockE
-@pytest.mark.parametrize(
-    "layer_size, out", [(2, 10), (4, 12), (5, 10), (7, 10)]
-)
+@pytest.mark.parametrize("layer_size, out", [(2, 10), (4, 12), (5, 10), (7, 10)])
 def test_fc_residual_block(linear_input, layer_size, out):
     activation = nn.ReLU()
 
-    block = ResidualBlockFC(
-        10, out, count=layer_size, activation=activation
-    ).cuda()
+    block = ResidualBlockFC(10, out, count=layer_size, activation=activation).cuda()
 
     output_tensor = block(linear_input)
 
@@ -43,9 +39,7 @@ def test_fc_residual_block(linear_input, layer_size, out):
 def test_cnn_residual_block(conv_input, layer_size):
     activation = nn.ReLU()
 
-    block = ResidualBlockCNN(
-        10, 12, count=layer_size, activation=activation
-    ).cuda()
+    block = ResidualBlockCNN(10, 12, count=layer_size, activation=activation).cuda()
 
     output_tensor = block(conv_input)
 
@@ -60,9 +54,7 @@ def test_cnn_residual_block(conv_input, layer_size):
 def test_cnn_bottelnecl_block(conv_input, layer_size):
     activation = nn.ReLU()
 
-    block = BottelNeckCNN(
-        10, 12, count=layer_size, activation=activation
-    ).cuda()
+    block = BottelNeckCNN(10, 12, count=layer_size, activation=activation).cuda()
 
     output_tensor = block(conv_input)
 

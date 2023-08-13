@@ -14,10 +14,10 @@ packages = [
 
 [tool.poetry.dependencies]
 python = ">=3.8,<4.0"
-torch = "^2.0.0"
 pytorch_lightning = "^2.0.0"
 torchvision = "^0.15.1"
 torchmetrics = "^1.0.0"
+torch = {url = "https://files.pythonhosted.org/packages/8c/4d/17e07377c9c3d1a0c4eb3fde1c7c16b5a0ce6133ddbabc08ceef6b7f2645/torch-2.0.1-cp310-cp310-manylinux1_x86_64.whl"}
 
 [tool.poetry.group.dev.dependencies]
 black = {version = "^22.3.0", allow-prereleases = true}
@@ -28,6 +28,7 @@ pytest-sugar = "^0.9.6"
 pytest-reverse = "^1.5.0"
 pytest-cov = "^3.0.0"
 pytest-bdd = "^6.1.1"
+mypy = "^1.5.0"
 
 
 [build-system]

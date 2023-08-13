@@ -28,11 +28,16 @@ For more details on the implementation and usage, please refer to the correspond
 
 For citation and usage of this code, please refer to the paper linked above.
 """
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    import torch
 
 import copy
 from abc import ABC, abstractmethod
 
-import torch
 import torch.nn as nn
 
 __all__ = ["ResidualBlockCNN", "ResidualBlockFC", "BottelNeckCNN"]
@@ -61,8 +66,8 @@ class _GenericResidualBlock(nn.Module, ABC):
         return
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        shortcut = self.shortcut(x)
-        res_block = self.res_block(x)
+        shortcut = self.shortcut(x)  # type: ignore[operator]
+        res_block = self.res_block(x)  # type: ignore[operator]
         return self.activation(shortcut + res_block)
 
     @abstractmethod
@@ -180,8 +185,8 @@ class ResidualBlockCNN(_GenericResidualBlock):
             channel_in,
             channel_out,
             activation,
-            hidden_channel=hidden_channel,
-            count=count,
+            count,
+            hidden_channel,
             *args,
             **kwargs,
         )
@@ -200,7 +205,7 @@ class ResidualBlockCNN(_GenericResidualBlock):
         out_channel: int,
         end_with_activation: bool = True,
     ) -> nn.Module:
-        model = []
+        model: list[nn.Module] = []
         model.append(
             nn.Conv2d(
                 in_channel,
@@ -222,9 +227,7 @@ class ResidualBlockCNN(_GenericResidualBlock):
         _model = []
 
         # Add the first convolutional block
-        _model.append(
-            self._get_conv_block(self.channel_in, self.hidden_channel)
-        )
+        _model.append(self._get_conv_block(self.channel_in, self.hidden_channel))
 
         # Add the intermediate convolutional blocks
         for _ in range(self.count - 2):
@@ -245,22 +248,20 @@ class ResidualBlockCNN(_GenericResidualBlock):
 
     def _build_shortcut(self) -> nn.Module:
         if self.channel_in == self.channel_out:
-            return (
-                nn.Identity()
-            )  # Identity shortcut if channel_in == channel_out
-        else:
-            return nn.Sequential(  # Convolutional shortcut if channel_in != channel_out
-                nn.Conv2d(
-                    self.channel_in,
-                    self.channel_out,
-                    kernel_size=1,
-                    stride=1,
-                    padding=0,
-                    groups=self.groups,
-                    bias=self.bias,
-                ),
-                nn.BatchNorm2d(self.channel_out),
-            )
+            return nn.Identity()  # Identity shortcut if channel_in == channel_out
+
+        return nn.Sequential(  # Convolutional shortcut if channel_in != channel_out
+            nn.Conv2d(
+                self.channel_in,
+                self.channel_out,
+                kernel_size=1,
+                stride=1,
+                padding=0,
+                groups=self.groups,
+                bias=self.bias,
+            ),
+            nn.BatchNorm2d(self.channel_out),
+        )
 
 
 class ResidualBlockFC(_GenericResidualBlock):
@@ -339,8 +340,8 @@ class ResidualBlockFC(_GenericResidualBlock):
             channel_in,
             channel_out,
             activation,
-            hidden_channel=hidden_channel,
-            count=count,
+            count,
+            hidden_channel,
             *args,
             **kwargs,
         )
@@ -355,7 +356,7 @@ class ResidualBlockFC(_GenericResidualBlock):
         out_channel: int,
         end_with_activation: bool = True,
     ) -> nn.Module:
-        _model = []
+        _model: list[nn.Module] = []
         _model.append(nn.Linear(in_channel, out_channel, bias=self.bias))
         _model.append(nn.BatchNorm1d(out_channel))
         if end_with_activation:
@@ -366,16 +367,12 @@ class ResidualBlockFC(_GenericResidualBlock):
         # Instantiate a module list
         _model = []
         # Add the first linear block
-        _model.append(
-            self._get_linear_block(self.channel_in, self.hidden_channel)
-        )
+        _model.append(self._get_linear_block(self.channel_in, self.hidden_channel))
 
         # Add the intermediate linear blocks
         for _ in range(self.count - 2):
             _model.append(
-                self._get_linear_block(
-                    self.hidden_channel, self.hidden_channel
-                )
+                self._get_linear_block(self.hidden_channel, self.hidden_channel)
             )
 
         # Add the last linear block
@@ -391,18 +388,12 @@ class ResidualBlockFC(_GenericResidualBlock):
 
     def _build_shortcut(self) -> nn.Module:
         if self.channel_in == self.channel_out:
-            return (
-                nn.Identity()
-            )  # Identity shortcut if channel_in == channel_out
-        else:
-            return (
-                nn.Sequential(  # Linear shortcut if channel_in != channel_out
-                    nn.Linear(
-                        self.channel_in, self.channel_out, bias=self.bias
-                    ),
-                    nn.BatchNorm1d(self.channel_out),
-                )
-            )
+            return nn.Identity()  # Identity shortcut if channel_in == channel_out
+
+        return nn.Sequential(  # Linear shortcut if channel_in != channel_out
+            nn.Linear(self.channel_in, self.channel_out, bias=self.bias),
+            nn.BatchNorm1d(self.channel_out),
+        )
 
 
 class BottelNeckCNN(_GenericResidualBlock):
@@ -509,7 +500,7 @@ class BottelNeckCNN(_GenericResidualBlock):
         end_with_activation: bool = True,
         one_by_one_conv: bool = False,
     ) -> nn.Module:
-        _model = []
+        _model: list[nn.Module] = []
 
         if one_by_one_conv:
             _model.append(
