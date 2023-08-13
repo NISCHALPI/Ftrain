@@ -22,6 +22,10 @@ def test_lstm_cell(
     globa_norm,
     globally_joined_norm,
 ):
+    curr_device = (
+        torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+    )
+
     cell = LSTMCell(
         input_size=input_dim,
         hidden_size=hidden_dim,
@@ -30,13 +34,25 @@ def test_lstm_cell(
         conditional_cell_state=conditional_cell_state,
         global_layer_norm=globa_norm,
         global_joint_layer_norm=globally_joined_norm,
+    ).to(device=curr_device)
+
+    x_t = torch.rand(batch_size, input_dim, device=curr_device)
+    h_t_prev = torch.rand(
+        batch_size, hidden_dim, requires_grad=True, device=curr_device
+    )
+    c_t_prev = torch.rand(
+        batch_size, hidden_dim, requires_grad=True, device=curr_device
     )
 
-    x_t = torch.rand(batch_size, input_dim)
-    h_t_prev = torch.rand(batch_size, hidden_dim, requires_grad=True)
-    c_t_prev = torch.rand(batch_size, hidden_dim, requires_grad=True)
+    # All parameters should be on the GPU
+    if torch.cuda.is_available():
+        assert all([param.is_cuda for param in cell.parameters()])
+
     if extra_forcing_input_dim is not None:
-        teacher_input = [torch.rand(batch_size, dim) for dim in extra_forcing_input_dim]
+        teacher_input = [
+            torch.rand(batch_size, dim, device=curr_device)
+            for dim in extra_forcing_input_dim
+        ]
 
     h_t_next, c_t_next = (
         cell(x_t, h_t_prev, c_t_prev, *teacher_input)

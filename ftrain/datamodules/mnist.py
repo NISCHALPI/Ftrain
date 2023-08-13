@@ -1,12 +1,22 @@
-import torch  # noqa: D100
+"""MNIST DataModule."""
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    import torch
+
+
+if TYPE_CHECKING:
+    from pytorch_lightning.utilities.types import (
+        EVAL_DATALOADERS,
+        TRAIN_DATALOADERS,
+    )
+
 from pytorch_lightning import LightningDataModule
-from pytorch_lightning.utilities.types import (
-    EVAL_DATALOADERS,
-    TRAIN_DATALOADERS,
-)
 from torch.utils.data import DataLoader, random_split
-from torchvision import transforms
-from torchvision.datasets import MNIST
+from torchvision import transforms  # type: ignore[import]
+from torchvision.datasets import MNIST  # type: ignore[import]
 
 __all__ = ["MnistDataModule"]
 
@@ -19,7 +29,7 @@ class MnistDataModule(LightningDataModule):  # noqa: D101
         self,  # noqa: ANN101
         data_dir: str,
         batch_size: int = 32,
-        transformations: torch.nn.Module = None,
+        transformations: torch.nn.Module | None = None,
         num_workers: int = 4,
     ) -> None:
         super().__init__()
@@ -31,9 +41,7 @@ class MnistDataModule(LightningDataModule):  # noqa: D101
             self.transforms = transforms.Compose(
                 [
                     transforms.ToTensor(),
-                    transforms.RandomAffine(
-                        degrees=(-15, 15), translate=(0.01, 0.01)
-                    ),
+                    transforms.RandomAffine(degrees=(-15, 15), translate=(0.01, 0.01)),
                 ]
             )
         else:

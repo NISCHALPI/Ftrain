@@ -22,6 +22,10 @@ def test_base_gate(
     globally_joined_norm,
     activation,
 ):
+    curr_device = (
+        torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+    )
+
     gate = _Gate(
         input_dim=input_dim,
         hidden_dim=hidden_dim,
@@ -30,16 +34,19 @@ def test_base_gate(
         global_norm=globa_norm,
         globally_joined_norm=globally_joined_norm,
         activation=activation,
-    )
+    ).to(device=curr_device)
 
     h_t = gate(
-        torch.rand(batch_size, input_dim),
-        torch.rand(batch_size, hidden_dim, requires_grad=True),
-        *[torch.rand(batch_size, dim) for dim in extra_input_dim]
+        torch.rand(batch_size, input_dim, device=curr_device),
+        torch.rand(batch_size, hidden_dim, requires_grad=True, device=curr_device),
+        *[torch.rand(batch_size, dim, device=curr_device) for dim in extra_input_dim]
         if extra_input_dim
         else [],
     )
 
+    # All parameters should be on the GPU
+    if torch.cuda.is_available():
+        assert all([param.is_cuda for param in gate.parameters()])
     assert h_t.shape == (batch_size, hidden_dim)
     if globally_joined_norm:
         assert hasattr(gate, "ln_global_joined_norm")

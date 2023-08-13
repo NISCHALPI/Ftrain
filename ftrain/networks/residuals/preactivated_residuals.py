@@ -9,9 +9,14 @@ Classes:
     - PreactivatedBottelNeckBlockCNN: A preactivated bottleneck block for CNNs.
 """
 
-from copy import deepcopy
+from __future__ import annotations
 
-import torch
+from copy import deepcopy
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    import torch
+
 import torch.nn as nn
 
 from .residual import _GenericResidualBlock
@@ -35,7 +40,7 @@ class _GenericPreactivatedResidualBlock(_GenericResidualBlock):
     """
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        return self.shortcut(x) + self.res_block(x)
+        return self.shortcut(x) + self.res_block(x)  # type: ignore[operator]
 
 
 class PreactivatedResidualBlockCNN(_GenericPreactivatedResidualBlock):
@@ -158,9 +163,7 @@ class PreactivatedResidualBlockCNN(_GenericPreactivatedResidualBlock):
     def _build_res_block(self) -> nn.Module:
         _model = []
         # Build the first conv block
-        _model.append(
-            self._get_conv_block(self.channel_in, self.hidden_channel)
-        )
+        _model.append(self._get_conv_block(self.channel_in, self.hidden_channel))
 
         # Build the middle conv blocks
         for _ in range(self.count - 2):
@@ -169,9 +172,7 @@ class PreactivatedResidualBlockCNN(_GenericPreactivatedResidualBlock):
             )
 
         # Build the last conv block
-        _model.append(
-            self._get_conv_block(self.hidden_channel, self.channel_out)
-        )
+        _model.append(self._get_conv_block(self.hidden_channel, self.channel_out))
 
         return nn.Sequential(*_model)
 
@@ -336,9 +337,7 @@ class PreactivatedBottelNeckBlockCNN(_GenericPreactivatedResidualBlock):
         _model = []
         # Build the first conv block
         _model.append(
-            self._get_conv_block(
-                self.channel_in, self.hidden_channel, one_by_one=True
-            )
+            self._get_conv_block(self.channel_in, self.hidden_channel, one_by_one=True)
         )
 
         # Build the middle conv blocks
@@ -349,9 +348,7 @@ class PreactivatedBottelNeckBlockCNN(_GenericPreactivatedResidualBlock):
 
         # Build the last conv block
         _model.append(
-            self._get_conv_block(
-                self.hidden_channel, self.channel_out, one_by_one=True
-            )
+            self._get_conv_block(self.hidden_channel, self.channel_out, one_by_one=True)
         )
 
         return nn.Sequential(*_model)

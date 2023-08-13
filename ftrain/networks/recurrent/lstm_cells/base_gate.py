@@ -156,9 +156,7 @@ class _Gate(nn.Module):
 
             # Extend global Norm if extra input is provided
             if hasattr(self, 'extra_input_dim'):
-                self.ln_global_norm.extend(
-                    [nn.LayerNorm(hidden_dim) for _ in range(len(self.extra_input_dim))]
-                )
+                self.ln_global_norm.extend([nn.LayerNorm(hidden_dim) for _ in range(len(self.extra_input_dim))])  # type: ignore[union-attr, operator]
 
         elif self.globally_joined_norm:
             self.register_module("ln_global_joined_norm", nn.LayerNorm(hidden_dim))
@@ -168,13 +166,17 @@ class _Gate(nn.Module):
     def _global_sum(
         self, x_t: torch.Tensor, h_t: torch.Tensor, *extra_input: torch.Tensor
     ) -> torch.Tensor:
-        preactivated_mask = self.ln_global_norm[0](
-            F.linear(x_t, self.weight_ih)
-        ) + self.ln_global_norm[1](F.linear(h_t, self.weight_hh))
+        preactivated_mask = self.ln_global_norm[0](  # type: ignore[operator, index]
+            F.linear(x_t, self.weight_ih)  # type: ignore[arg-type]
+        ) + self.ln_global_norm[
+            1
+        ](  # type: ignore[index]
+            F.linear(h_t, self.weight_hh)  # type: ignore[arg-type]
+        )  # type: ignore[operator, index, arg-type]
 
         if hasattr(self, 'extra_input_dim'):
             for id, extra_input_t in enumerate(extra_input):
-                preactivated_mask += self.ln_global_norm[id + 2](
+                preactivated_mask += self.ln_global_norm[id + 2](  # type: ignore[operator, index]
                     F.linear(extra_input_t, self.extra_parameter_list[id])
                 )
 
@@ -190,8 +192,8 @@ class _Gate(nn.Module):
         *extra_input,
         exclude_bias: bool = False,
     ) -> torch.Tensor:
-        preactivated_mask = F.linear(x_t, self.weight_ih) + F.linear(
-            h_t, self.weight_hh
+        preactivated_mask = F.linear(x_t, self.weight_ih) + F.linear(  # type: ignore[arg-type]
+            h_t, self.weight_hh  # type: ignore[arg-type]
         )
         if hasattr(self, 'extra_input_dim'):
             for i, extra_input_t in enumerate(extra_input):
@@ -224,7 +226,7 @@ class _Gate(nn.Module):
         # See the Globally Joined Norm - Layer Norm application
         if self.globally_joined_norm:
             return self.activation(
-                self.ln_global_joined_norm(
+                self.ln_global_joined_norm(  # type: ignore[operator, index]
                     self._naive_sum(x_t, h_t, *extra_input, exclude_bias=True)
                 )
             )
