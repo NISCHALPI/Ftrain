@@ -1,6 +1,7 @@
 import pytest
 import torch
 import torch.nn as nn
+
 from .residual_classifier import CNNResidualClassifier
 
 
@@ -41,7 +42,7 @@ def test_cnn_residual_classifier(conv_input, n_layer, in_channels, out_channels,
 
     assert output.shape == (5, out_channels)
     assert model.layers == n_layer
-    assert output.requires_grad == True
+    assert output.requires_grad is True
     assert model.kernel_size == kernel_size 
 
     return

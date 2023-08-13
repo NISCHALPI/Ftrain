@@ -1,10 +1,10 @@
 """Network Designs from papers."""
+from .preactivated_residuals import (
+    PreactivatedBottelNeckBlockCNN,
+    PreactivatedResidualBlockCNN,
+)
 from .residual import (
     BottelNeckCNN,
     ResidualBlockCNN,
     ResidualBlockFC,
-)
-from .preactivated_residuals import (
-    PreactivatedResidualBlockCNN,
-    PreactivatedBottelNeckBlockCNN,
 )

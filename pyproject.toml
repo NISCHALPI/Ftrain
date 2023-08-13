@@ -13,13 +13,14 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-python = ">=3.8"
+python = ">=3.8,<4.0"
+torch = "^2.0.0"
+pytorch_lightning = "^2.0.0"
+torchvision = "^0.15.1"
+torchmetrics = "^1.0.0"
 
 [tool.poetry.group.dev.dependencies]
-pre-commit = "^2.18.1"
 black = {version = "^22.3.0", allow-prereleases = true}
-xdoctest = "^1.0.0"
-poethepoet = "^0.16.4"
 ruff = "^0.0.253"
 pytest = "7.1.1"
 pytest-html = "^3.1.1"
@@ -27,64 +28,42 @@ pytest-sugar = "^0.9.6"
 pytest-reverse = "^1.5.0"
 pytest-cov = "^3.0.0"
 pytest-bdd = "^6.1.1"
-mkdocs = "^1.4.2"
-mkdocs-material = "^8.5.10"
-mkdocs-gen-files = "^0.4.0"
-mkdocs-awesome-pages-plugin = "^2.8.0"
-mkapi = "^1.0.14"
 
-[tool.poetry.scripts]
--c = "poethepoet:main"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
-[tool.black]
-line-length = 79
-target-version = ['py310']
-include = '\.pyi?$'
 
 [tool.ruff]
-ignore = ["E501", "ANN002", "ANN101", "S101","ANN003"]
-line-length = 79
-select = [
-    "C9",
-    "E",
-    "F",
-    "W",
-    "D",
-    "G",
-    "A",
-    "PT",
-    "S",
-    "B",
-    "ANN",
-    "SIM",
-    "I",
-    "N",
-]
+select =["E", "F", "I", "UP", "ANN", "ARG", "D", "RET", "TCH"]
+exclude = ["tests", "docs", "*test_*"]
+src =['./ftrain']
+# Ignore long lines and self annotations 
+ignore =['ANN101', 'E501', 'ANN002', 'ANN003']
 
-exclude = ['test_*.py']
+[tool.ruff.per-file-ignores]
+"__init__.py" = ["E402", "F401"]
 
-ignore-init-module-imports = true
-
-
-
-[tool.ruff.mccabe]
-max-complexity = 10
+[tool.ruff.flake8-quotes]
+docstring-quotes = "double"
 
 [tool.ruff.pydocstyle]
 convention = "google"
 
-[tool.ruff.per-file-ignores]
-"tests/*" = ["S101"]
-"__init__.py" = ["F401"]
+
+[tool.black]
+use-single-quotes = false
+line-length = 88
+skip-string-normalization = true
+target-version = ["py310"]
+
+[tool.black.paths]
+include = ["./ftrain"]
 
 [tool.pytest.ini_options]
 minversion = "6.0"
 testpaths = [
-    "tests",
     "ftrain"
 ]
 python_files = ["test_*.py"]

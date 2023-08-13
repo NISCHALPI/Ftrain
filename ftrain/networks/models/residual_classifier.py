@@ -36,7 +36,6 @@ For more details about the available functionalities, refer to the docstrings of
 
 Please make sure to check the torch and torch.nn documentation for any changes in behavior or new features.
 """
-import typing as tp
 import warnings
 from copy import deepcopy
 
@@ -78,10 +77,10 @@ class CNNResidualClassifier(nn.Module):
         out_channels: int,
         layers: int,
         kernel_size: int = 3,
-        activation: tp.Optional[nn.Module] = None,
+        activation: nn.Module | None = None,
         num_residual_blocks: int = 2,
-        insert_custom_block: tp.Dict[int, nn.Module] = None,
-        hidden_unique_channels: tp.Optional[tp.Tuple[int, int]] = None,
+        insert_custom_block: dict[int, nn.Module] = None,
+        hidden_unique_channels: tuple[int, int] | None = None,
         *args,
         **kwargs,
     ) -> None:
@@ -191,10 +190,10 @@ class CNNResidualClassifier(nn.Module):
 
     @staticmethod
     def _get_channel_propagator(
-        internal_uniques_channels: tp.List[int], n_layers: int
+        internal_uniques_channels: list[int], n_layers: int
     ) -> torch.Tensor:
         propagotar = torch.tensor(internal_uniques_channels).repeat(
-            (n_layers // len(internal_uniques_channels) + 1)
+            n_layers // len(internal_uniques_channels) + 1
         )
         return propagotar[:n_layers].sort()[0]
 

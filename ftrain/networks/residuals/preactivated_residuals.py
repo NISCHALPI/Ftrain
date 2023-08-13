@@ -9,14 +9,12 @@ Classes:
     - PreactivatedBottelNeckBlockCNN: A preactivated bottleneck block for CNNs.
 """
 
-import typing as tp
 from copy import deepcopy
 
 import torch
 import torch.nn as nn
 
 from .residual import _GenericResidualBlock
-
 
 __all__ = ["PreactivatedResidualBlockCNN", "PreactivatedBottelNeckBlockCNN"]
 
@@ -89,10 +87,10 @@ class PreactivatedResidualBlockCNN(_GenericPreactivatedResidualBlock):
         channel_in: int,
         channel_out: int,
         activation: nn.Module,
-        hidden_channel: tp.Optional[int] = None,
-        kernel_size: tp.Union[int, tp.Tuple[int, int]] = 3,
-        stride: tp.Union[int, tp.Tuple[int, int]] = 1,
-        padding: tp.Union[int, tp.Tuple[int, int]] = 1,
+        hidden_channel: int | None = None,
+        kernel_size: int | tuple[int, int] = 3,
+        stride: int | tuple[int, int] = 1,
+        padding: int | tuple[int, int] = 1,
         groups: int = 1,
         bias: bool = True,
         count: int = 2,
@@ -240,10 +238,10 @@ class PreactivatedBottelNeckBlockCNN(_GenericPreactivatedResidualBlock):
         channel_in: int,
         channel_out: int,
         activation: nn.Module,
-        hidden_channel: tp.Optional[int] = None,
-        kernel_size: tp.Union[int, tp.Tuple[int, int]] = 3,
-        stride: tp.Union[int, tp.Tuple[int, int]] = 1,
-        padding: tp.Union[int, tp.Tuple[int, int]] = 1,
+        hidden_channel: int | None = None,
+        kernel_size: int | tuple[int, int] = 3,
+        stride: int | tuple[int, int] = 1,
+        padding: int | tuple[int, int] = 1,
         groups: int = 1,
         bias: bool = True,
         count: int = 3,

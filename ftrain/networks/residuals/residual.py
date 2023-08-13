@@ -30,7 +30,6 @@ For citation and usage of this code, please refer to the paper linked above.
 """
 
 import copy
-import typing as tp
 from abc import ABC, abstractmethod
 
 import torch
@@ -46,7 +45,7 @@ class _GenericResidualBlock(nn.Module, ABC):
         channel_out: int,
         activation: nn.Module,
         count: int,
-        hidden_channel: tp.Optional[int] = None,
+        hidden_channel: int | None = None,
         *args,
         **kwargs,
     ) -> None:
@@ -125,10 +124,10 @@ class ResidualBlockCNN(_GenericResidualBlock):
         channel_in: int,
         channel_out: int,
         activation: nn.Module,
-        hidden_channel: tp.Optional[int] = None,
-        kernel_size: tp.Union[int, tp.Tuple[int, int]] = 3,
-        stride: tp.Union[int, tp.Tuple[int, int]] = 1,
-        padding: tp.Union[int, tp.Tuple[int, int]] = 1,
+        hidden_channel: int | None = None,
+        kernel_size: int | tuple[int, int] = 3,
+        stride: int | tuple[int, int] = 1,
+        padding: int | tuple[int, int] = 1,
         groups: int = 1,
         bias: bool = True,
         count: int = 2,
@@ -299,7 +298,7 @@ class ResidualBlockFC(_GenericResidualBlock):
         channel_in: int,
         channel_out: int,
         activation: nn.Module,
-        hidden_channel: tp.Optional[int] = None,
+        hidden_channel: int | None = None,
         bias: bool = True,
         count: int = 2,
         *args,
@@ -459,10 +458,10 @@ class BottelNeckCNN(_GenericResidualBlock):
         channel_in: int,
         channel_out: int,
         activation: nn.Module,
-        hidden_channel: tp.Optional[int] = None,
-        kernel_size: tp.Union[int, tp.Tuple[int, int]] = 3,
-        stride: tp.Union[int, tp.Tuple[int, int]] = 1,
-        padding: tp.Union[int, tp.Tuple[int, int]] = 1,
+        hidden_channel: int | None = None,
+        kernel_size: int | tuple[int, int] = 3,
+        stride: int | tuple[int, int] = 1,
+        padding: int | tuple[int, int] = 1,
         groups: int = 1,
         bias: bool = True,
         count: int = 3,

@@ -1,9 +1,10 @@
 import pytest
 import torch
 import torch.nn as nn
+
 from .preactivated_residuals import (
-    PreactivatedResidualBlockCNN,
     PreactivatedBottelNeckBlockCNN,
+    PreactivatedResidualBlockCNN,
 )
 
 
@@ -30,7 +31,7 @@ def test_preactivated_cnn_residual_block(conv_input, layer_size):
     assert output_tensor.shape == torch.Size([5, 12, 32, 32])
     assert output_tensor.requires_grad
     assert block.count == layer_size
-    assert block.bias == True
+    assert block.bias is True
     assert block.hidden_channel == 12
 
 
@@ -47,5 +48,5 @@ def test_preactivated_cnn_bottelnecl_block(conv_input, layer_size):
     assert output_tensor.shape == torch.Size([5, 12, 32, 32])
     assert output_tensor.requires_grad
     assert block.count == layer_size
-    assert block.bias == True
+    assert block.bias is True
     assert block.hidden_channel == 12

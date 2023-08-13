@@ -1,6 +1,6 @@
 """Pre-Implemented Simple Lightning Module."""
-import typing as tp  # noqa: D100
-from typing import Any, Sequence
+from collections.abc import Sequence
+from typing import Any
 
 import pytorch_lightning as pl
 import torch
@@ -38,15 +38,11 @@ class StandardLightningModule(pl.LightningModule):
         model: torch.nn.Module,
         optimizer: torch.optim.Optimizer,
         loss: torch.nn.modules.loss._Loss,
-        metric: tp.Union[Metric, MetricCollection],
-        lrs_scheduler: tp.Optional[
-            torch.optim.lr_scheduler.LRScheduler
-        ] = None,
-        lrs_scheduler_moniter: tp.Optional[str] = None,
+        metric: Metric | MetricCollection,
+        lrs_scheduler: torch.optim.lr_scheduler.LRScheduler | None = None,
+        lrs_scheduler_moniter: str | None = None,
         lr_init: float = 0.001,
-        example_input_shape: tp.Optional[
-            tp.Union[torch.Size, tp.Tuple[int]]
-        ] = None,
+        example_input_shape: torch.Size | tuple[int] | None = None,
         *args: Any,  # noqa: ANN401
         **kwargs: Any,  # noqa: ANN401
     ) -> None:
@@ -103,7 +99,7 @@ class StandardLightningModule(pl.LightningModule):
         batch_idx: torch.Tensor,
         *args: Any,  # noqa: ANN401
         **kwargs: Any,  # noqa: ANN401
-    ) -> tp.Optional[STEP_OUTPUT]:
+    ) -> STEP_OUTPUT | None:
         X, y = batch  # noqa: N806
         fp = self.forward(X)
         loss = self.loss(fp, y)
@@ -127,7 +123,7 @@ class StandardLightningModule(pl.LightningModule):
         batch_idx: torch.Tensor,
         *args: Any,  # noqa: ANN401
         **kwargs: Any,  # noqa: ANN401
-    ) -> tp.Optional[STEP_OUTPUT]:
+    ) -> STEP_OUTPUT | None:
         X, y = batch  # noqa: N806
         fp = self.forward(X)
         loss = self.loss(fp, y)
@@ -147,7 +143,7 @@ class StandardLightningModule(pl.LightningModule):
 
     def configure_callbacks(  # noqa: D102
         self,
-    ) -> tp.Union[Sequence[Callback], Callback]:  # noqa: ANN101, D102
+    ) -> Sequence[Callback] | Callback:  # noqa: ANN101, D102
         # Callbacks from simple callback module
         _default_callbacks = simple_callbacks
         if (
