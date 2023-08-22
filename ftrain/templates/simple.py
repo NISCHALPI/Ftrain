@@ -51,6 +51,7 @@ class StandardLightningModule(pl.LightningModule):
         lrs_scheduler_moniter: str | None = None,
         lr_init: float = 0.001,
         example_input_shape: torch.Size | tuple[int] | None = None,
+        void_rich_progress_bar: bool = False,
         *args: Any,  # noqa: ANN401
         **kwargs: Any,  # noqa: ANN401
     ) -> None:
@@ -69,6 +70,7 @@ class StandardLightningModule(pl.LightningModule):
         self.train_metrics = metric.clone(prefix="train_")
         self.valid_metrics = metric.clone(prefix="valid_")
         self.test_metric = metric.clone(prefix="test_")
+        self.void_rich_progress_bar = void_rich_progress_bar
         self.save_hyperparameters("lr_init", "lrs_scheduler")
 
     def forward(
@@ -151,6 +153,8 @@ class StandardLightningModule(pl.LightningModule):
         _default_callbacks = simple_callbacks
         if self._torch_lrs_scheduler is None and "lr_moniter" in _default_callbacks:
             _default_callbacks.pop("lr_monitor")
+        if self.void_rich_progress_bar and "rich_progress_bar" in _default_callbacks:
+            _default_callbacks.pop("rich_progress_bar")
         return list(_default_callbacks.values())
 
     def configure_optimizers(self) -> dict:  # noqa: ANN101, D102
